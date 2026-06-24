@@ -7,6 +7,8 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  alarm:
+    path: third_party/alarm
   flutter:
     sdk: flutter
   flutter_local_notifications: ^22.0.1

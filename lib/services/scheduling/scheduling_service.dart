@@ -8,6 +8,7 @@ import '../../features/alerts/domain/models/alert.dart';
 import '../../features/events/data/event_dao.dart';
 import '../../features/events/data/event_repository_impl.dart';
 import '../../features/events/domain/models/calendar_event.dart';
+import '../alarm/alarm_service.dart';
 import '../database/database_service.dart';
 import '../notifications/notification_channels.dart';
 import '../notifications/notification_service.dart';
@@ -16,11 +17,6 @@ import '../permissions/permission_service.dart';
 /// Orquesta [NotificationService] para programar, cancelar y reprogramar
 /// notificaciones de alertas y eventos.
 ///
-/// Las alarmas sonoras están temporalmente desactivadas mientras el paquete
-/// `alarm` no sea compatible con compileSdk 35+. La configuración de alarma
-/// se sigue guardando en SQLite; reactivar integrando [AlarmService] cuando
-/// el paquete esté disponible.
-///
 /// Singleton. Mantiene sus propias instancias de DAO/repositorio sobre el
 /// [DatabaseService] global.
 class SchedulingService {
@@ -28,11 +24,14 @@ class SchedulingService {
   static final SchedulingService instance = SchedulingService._();
 
   final _notif = NotificationService.instance;
+  final _alarm = AlarmService.instance;
 
-  late final _alertRepo =
-      AlertRepositoryImpl(AlertDao(DatabaseService.instance));
-  late final _eventRepo =
-      EventRepositoryImpl(EventDao(DatabaseService.instance));
+  late final _alertRepo = AlertRepositoryImpl(
+    AlertDao(DatabaseService.instance),
+  );
+  late final _eventRepo = EventRepositoryImpl(
+    EventDao(DatabaseService.instance),
+  );
 
   // ─────────────────────────────────────────────────────────────────
   // Eventos
@@ -40,7 +39,7 @@ class SchedulingService {
 
   Future<void> scheduleEvent(CalendarEvent event) async {
     await _scheduleEventNotification(event);
-    // TODO(alarm): programar alarma sonora si event.alarmConfig.enabled.
+    await _scheduleEventAlarm(event);
   }
 
   Future<void> _scheduleEventNotification(CalendarEvent event) async {
@@ -49,9 +48,9 @@ class SchedulingService {
     final perm = await PermissionService.instance.checkNotificationPermission();
     if (perm != NotificationPermissionStatus.granted) return;
 
-    final trigger = event.startDateTime
-        .toLocal()
-        .subtract(Duration(minutes: event.notificationConfig.minutesBefore));
+    final trigger = event.startDateTime.toLocal().subtract(
+      Duration(minutes: event.notificationConfig.minutesBefore),
+    );
     if (!trigger.isAfter(DateTime.now())) return;
 
     await _notif.scheduleNotification(
@@ -68,7 +67,28 @@ class SchedulingService {
 
   Future<void> cancelEvent(CalendarEvent event) async {
     await _notif.cancel(stableId('event:${event.id}'));
-    // TODO(alarm): cancelar alarma sonora: AlarmService.instance.cancel(stableId('alarm:event:${event.id}'))
+    final alarmId = stableId('alarm:event:${event.id}');
+    await _alarm.cancel(alarmId);
+  }
+
+  Future<void> _scheduleEventAlarm(CalendarEvent event) async {
+    if (!event.alarmConfig.enabled) return;
+
+    final trigger = event.startDateTime.toLocal();
+    if (!trigger.isAfter(DateTime.now())) return;
+
+    final alarmId = stableId('alarm:event:${event.id}');
+    await _alarm.scheduleAlarm(
+      id: alarmId,
+      title: event.title,
+      body: (event.description?.isNotEmpty ?? false)
+          ? event.description!
+          : 'Tienes un evento programado.',
+      dateTime: trigger,
+      assetAudioPath: event.alarmConfig.soundAsset,
+      loopAudio: event.alarmConfig.looping,
+      payload: 'alarm:event:${event.id}',
+    );
   }
 
   Future<void> rescheduleEvent(CalendarEvent event) async {
@@ -84,32 +104,31 @@ class SchedulingService {
   ///
   /// Solo se programa una ocurrencia a la vez.
   ///
-  /// TODO(alarm): cuando AlarmService esté disponible, programar también la
-  /// alarma sonora para [next] si alert.alarmConfig.enabled.
-  ///
-  /// TODO(reprogramación): implementar reprogramación automática tras disparo
-  /// mediante alarma exacta o WorkManager (Fase 6B/7).
-  Future<void> scheduleAlert(Alert alert) async {
+  /// TODO(alarm): Reprogramar la siguiente ocurrencia de una alerta recurrente
+  /// tras detener o posponer la alarma actual, incluso si la app estaba cerrada.
+  Future<void> scheduleAlert(Alert alert, {DateTime? from}) async {
     if (!alert.isActive) return;
-    if (!alert.notificationConfig.enabled) return;
 
     final next = nextOccurrence(
       rule: alert.recurrence,
       timeMinutes: alert.timeMinutes,
-      from: DateTime.now(),
+      from: from ?? DateTime.now(),
     );
     if (next == null) return;
 
     await _scheduleAlertNotification(alert, next);
-    // TODO(alarm): await _scheduleAlertAlarm(alert, next);
+    await _scheduleAlertAlarm(alert, next);
   }
 
   Future<void> _scheduleAlertNotification(Alert alert, DateTime next) async {
+    if (!alert.notificationConfig.enabled) return;
+
     final perm = await PermissionService.instance.checkNotificationPermission();
     if (perm != NotificationPermissionStatus.granted) return;
 
-    final trigger =
-        next.subtract(Duration(minutes: alert.notificationConfig.minutesBefore));
+    final trigger = next.subtract(
+      Duration(minutes: alert.notificationConfig.minutesBefore),
+    );
     if (!trigger.isAfter(DateTime.now())) return;
 
     await _notif.scheduleNotification(
@@ -126,12 +145,41 @@ class SchedulingService {
 
   Future<void> cancelAlert(Alert alert) async {
     await _notif.cancel(stableId('alert:${alert.id}'));
-    // TODO(alarm): cancelar alarma sonora: AlarmService.instance.cancel(stableId('alarm:alert:${alert.id}'))
+    final alarmId = stableId('alarm:alert:${alert.id}');
+    await _alarm.cancel(alarmId);
   }
 
-  Future<void> rescheduleAlert(Alert alert) async {
-    await cancelAlert(alert);
-    await scheduleAlert(alert);
+  Future<void> _scheduleAlertAlarm(Alert alert, DateTime next) async {
+    if (!alert.alarmConfig.enabled) return;
+
+    final trigger = next.toLocal();
+    if (!trigger.isAfter(DateTime.now())) return;
+
+    // TODO(alarm): reprogramar automáticamente la siguiente ocurrencia cuando
+    // el paquete notifique que esta alarma recurrente ya ha sonado.
+    final alarmId = stableId('alarm:alert:${alert.id}');
+    await _alarm.scheduleAlarm(
+      id: alarmId,
+      title: alert.title,
+      body: (alert.description?.isNotEmpty ?? false)
+          ? alert.description!
+          : 'Tienes una alerta pendiente.',
+      dateTime: trigger,
+      assetAudioPath: alert.alarmConfig.soundAsset,
+      loopAudio: alert.alarmConfig.looping,
+      payload: 'alarm:alert:${alert.id}',
+    );
+  }
+
+  Future<void> rescheduleAlert(
+    Alert alert, {
+    DateTime? from,
+    bool cancelExisting = true,
+  }) async {
+    if (cancelExisting) {
+      await cancelAlert(alert);
+    }
+    await scheduleAlert(alert, from: from);
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -142,6 +190,10 @@ class SchedulingService {
   ///
   /// Se llama al arrancar la app para restaurar lo que se perdió tras reinicio
   /// del dispositivo ([BOOT_COMPLETED]) o actualización ([MY_PACKAGE_REPLACED]).
+  ///
+  /// Con targetSdk 35 no intentamos iniciar reproducción de audio propia desde
+  /// BOOT_COMPLETED. Al abrir la app, este método reprograma el estado esperado;
+  /// el receptor del plugin `alarm` solo restaura alarmas que él tenía guardadas.
   Future<void> rescheduleAll() async {
     final alerts = await _alertRepo.findAll();
     for (final alert in alerts) {
@@ -149,7 +201,8 @@ class SchedulingService {
         await rescheduleAlert(alert);
       } catch (e) {
         debugPrint(
-            '[SchedulingService] rescheduleAlert(${alert.id}) failed: $e');
+          '[SchedulingService] rescheduleAlert(${alert.id}) failed: $e',
+        );
       }
     }
 
@@ -159,7 +212,8 @@ class SchedulingService {
         await rescheduleEvent(event);
       } catch (e) {
         debugPrint(
-            '[SchedulingService] rescheduleEvent(${event.id}) failed: $e');
+          '[SchedulingService] rescheduleEvent(${event.id}) failed: $e',
+        );
       }
     }
   }

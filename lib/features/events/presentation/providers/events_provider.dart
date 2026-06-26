@@ -27,8 +27,8 @@ final eventRepositoryProvider = Provider<EventRepository>((ref) {
 
 final eventsNotifierProvider =
     AsyncNotifierProvider<EventsNotifier, List<CalendarEvent>>(
-  EventsNotifier.new,
-);
+      EventsNotifier.new,
+    );
 
 /// Gestiona la lista completa de eventos y expone operaciones CRUD.
 ///
@@ -54,7 +54,11 @@ class EventsNotifier extends AsyncNotifier<List<CalendarEvent>> {
     await _repo.save(event);
     try {
       await _scheduling.scheduleEvent(event);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[EventsNotifier] scheduleEvent failed: $e');
     }
     state = await AsyncValue.guard(_fetchSorted);
@@ -67,13 +71,21 @@ class EventsNotifier extends AsyncNotifier<List<CalendarEvent>> {
   Future<void> editEvent(CalendarEvent event) async {
     try {
       await _scheduling.cancelEvent(event);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[EventsNotifier] cancelEvent failed: $e');
     }
     await _repo.save(event);
     try {
       await _scheduling.scheduleEvent(event);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[EventsNotifier] scheduleEvent(edit) failed: $e');
     }
     state = await AsyncValue.guard(_fetchSorted);
@@ -101,10 +113,7 @@ class EventsNotifier extends AsyncNotifier<List<CalendarEvent>> {
 
 /// Devuelve los eventos de [events] cuyo [CalendarEvent.startDateTime]
 /// convertido a hora local corresponde al día local [day].
-List<CalendarEvent> eventsForDay(
-  List<CalendarEvent> events,
-  DateTime day,
-) {
+List<CalendarEvent> eventsForDay(List<CalendarEvent> events, DateTime day) {
   final startOfDay = DateTime(day.year, day.month, day.day);
   final endOfDay = startOfDay.add(const Duration(days: 1));
 

@@ -21,11 +21,7 @@ class DatabaseService {
     final dir = await getDatabasesPath();
     final path = p.join(dir, 'event_alert.db');
 
-    return openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+    return openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
   Future<void> _onCreate(Database db, int version) async {

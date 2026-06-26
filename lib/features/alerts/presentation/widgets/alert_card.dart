@@ -52,9 +52,7 @@ class AlertCard extends StatelessWidget {
                         alert.title,
                         style: tt.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: active
-                              ? cs.onSurface
-                              : cs.onSurfaceVariant,
+                          color: active ? cs.onSurface : cs.onSurfaceVariant,
                         ),
                       ),
                       // Descripción (si existe)
@@ -89,10 +87,7 @@ class AlertCard extends StatelessWidget {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Switch(
-                      value: active,
-                      onChanged: onToggleActive,
-                    ),
+                    Switch(value: active, onChanged: onToggleActive),
                     IconButton(
                       icon: Icon(
                         Icons.delete_outline_rounded,
@@ -127,24 +122,28 @@ class _FeatureChips extends StatelessWidget {
     final chips = <Widget>[];
 
     if (alert.notificationConfig.enabled) {
-      chips.add(_chip(
-        context,
-        icon: Icons.notifications_rounded,
-        label: 'Notificación',
-        color: cs.secondary,
-        labelStyle: tt,
-      ));
+      chips.add(
+        _chip(
+          context,
+          icon: Icons.notifications_rounded,
+          label: 'Notificación',
+          color: cs.secondary,
+          labelStyle: tt,
+        ),
+      );
     }
 
     if (alert.alarmConfig.enabled) {
       if (chips.isNotEmpty) chips.add(const SizedBox(width: 6));
-      chips.add(_chip(
-        context,
-        icon: Icons.alarm_rounded,
-        label: 'Alarma',
-        color: cs.tertiary,
-        labelStyle: tt,
-      ));
+      chips.add(
+        _chip(
+          context,
+          icon: Icons.alarm_rounded,
+          label: 'Alarma',
+          color: cs.tertiary,
+          labelStyle: tt,
+        ),
+      );
     }
 
     if (chips.isEmpty) return const SizedBox.shrink();
@@ -164,10 +163,7 @@ class _FeatureChips extends StatelessWidget {
       children: [
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 3),
-        Text(
-          label,
-          style: labelStyle.labelSmall?.copyWith(color: color),
-        ),
+        Text(label, style: labelStyle.labelSmall?.copyWith(color: color)),
       ],
     );
   }

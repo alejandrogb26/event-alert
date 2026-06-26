@@ -17,15 +17,7 @@ import '../../../../../services/permissions/permission_service.dart';
 const _minutesBeforeOptions = [0, 5, 10, 15, 30, 60, 120];
 const _snoozeOptions = [0, 5, 10, 15, 20, 30];
 
-const _weekdayLabels = {
-  1: 'L',
-  2: 'M',
-  3: 'X',
-  4: 'J',
-  5: 'V',
-  6: 'S',
-  7: 'D',
-};
+const _weekdayLabels = {1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S', 7: 'D'};
 
 const _weekdayFullNames = {
   1: 'Lunes',
@@ -79,7 +71,6 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
   late int _minutesBefore;
 
   late bool _alarmEnabled;
-  late bool _alarmFullScreen;
   late int _snoozeMinutes;
 
   late bool _isActive;
@@ -113,14 +104,13 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
     _notifEnabled = a?.notificationConfig.enabled ?? true;
     // Asegura que el valor está en la lista de opciones; si no, cae a 0
     final savedMinutes = a?.notificationConfig.minutesBefore ?? 0;
-    _minutesBefore =
-        _minutesBeforeOptions.contains(savedMinutes) ? savedMinutes : 0;
+    _minutesBefore = _minutesBeforeOptions.contains(savedMinutes)
+        ? savedMinutes
+        : 0;
 
     _alarmEnabled = a?.alarmConfig.enabled ?? false;
-    _alarmFullScreen = a?.alarmConfig.fullScreen ?? false;
     final savedSnooze = a?.alarmConfig.snoozeMinutes ?? 5;
-    _snoozeMinutes =
-        _snoozeOptions.contains(savedSnooze) ? savedSnooze : 5;
+    _snoozeMinutes = _snoozeOptions.contains(savedSnooze) ? savedSnooze : 5;
 
     _isActive = a?.isActive ?? true;
   }
@@ -148,8 +138,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
   Future<void> _pickEndDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate:
-          _endDate ?? DateTime.now().add(const Duration(days: 30)),
+      initialDate: _endDate ?? DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
       helpText: 'Fecha límite de la alerta',
@@ -163,8 +152,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     // Validación extra: al menos un día seleccionado en modo semanal
-    if (_recurrenceType == RecurrenceType.weekly &&
-        _selectedWeekdays.isEmpty) {
+    if (_recurrenceType == RecurrenceType.weekly && _selectedWeekdays.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Selecciona al menos un día de la semana.'),
@@ -174,8 +162,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
     }
 
     final interval = (int.tryParse(_intervalCtrl.text) ?? 1).clamp(1, 99);
-    final dayOfMonth =
-        (int.tryParse(_dayOfMonthCtrl.text) ?? 1).clamp(1, 31);
+    final dayOfMonth = (int.tryParse(_dayOfMonthCtrl.text) ?? 1).clamp(1, 31);
 
     final recurrence = RecurrenceRule(
       type: _recurrenceType,
@@ -183,17 +170,14 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
       weekdays: _recurrenceType == RecurrenceType.weekly
           ? List<int>.from(_selectedWeekdays)
           : null,
-      dayOfMonth:
-          _recurrenceType == RecurrenceType.monthly ? dayOfMonth : null,
+      dayOfMonth: _recurrenceType == RecurrenceType.monthly ? dayOfMonth : null,
       endDate: _endDate,
     );
 
     final alert = Alert(
       id: widget.alert?.id ?? const Uuid().v4(),
       title: _titleCtrl.text.trim(),
-      description: _descCtrl.text.trim().isEmpty
-          ? null
-          : _descCtrl.text.trim(),
+      description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
       timeMinutes: _timeOfDayToMinutes(_time),
       recurrence: recurrence,
       notificationConfig: AppNotificationConfig(
@@ -202,7 +186,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
       ),
       alarmConfig: AppAlarmConfig(
         enabled: _alarmEnabled,
-        fullScreen: _alarmFullScreen,
+        fullScreen: false,
         snoozeMinutes: _snoozeMinutes,
       ),
       isActive: _isActive,
@@ -214,8 +198,8 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
     // Si ya está concedido, la llamada es instantánea sin mostrar ningún diálogo.
     bool notifPermGranted = true;
     if (_notifEnabled) {
-      final permStatus =
-          await PermissionService.instance.requestNotificationPermission();
+      final permStatus = await PermissionService.instance
+          .requestNotificationPermission();
       notifPermGranted = permStatus == NotificationPermissionStatus.granted;
     }
 
@@ -247,12 +231,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? 'Editar alerta' : 'Nueva alerta'),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text('Guardar'),
-          ),
-        ],
+        actions: [TextButton(onPressed: _save, child: const Text('Guardar'))],
       ),
       body: Form(
         key: _formKey,
@@ -359,8 +338,8 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
         child: Text(
           label,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
       ),
     );
@@ -374,15 +353,13 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
         border: OutlineInputBorder(),
       ),
       items: const [
+        DropdownMenuItem(value: RecurrenceType.daily, child: Text('Diaria')),
+        DropdownMenuItem(value: RecurrenceType.weekly, child: Text('Semanal')),
+        DropdownMenuItem(value: RecurrenceType.monthly, child: Text('Mensual')),
         DropdownMenuItem(
-            value: RecurrenceType.daily, child: Text('Diaria')),
-        DropdownMenuItem(
-            value: RecurrenceType.weekly, child: Text('Semanal')),
-        DropdownMenuItem(
-            value: RecurrenceType.monthly, child: Text('Mensual')),
-        DropdownMenuItem(
-            value: RecurrenceType.monthlyFirst,
-            child: Text('Primer día del mes')),
+          value: RecurrenceType.monthlyFirst,
+          child: Text('Primer día del mes'),
+        ),
       ],
       onChanged: (v) {
         if (v == null) return;
@@ -401,9 +378,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
     final suffix = switch (_recurrenceType) {
       RecurrenceType.daily => 'día(s)',
       RecurrenceType.weekly => 'semana(s)',
-      RecurrenceType.monthly ||
-      RecurrenceType.monthlyFirst =>
-        'mes(es)',
+      RecurrenceType.monthly || RecurrenceType.monthlyFirst => 'mes(es)',
     };
 
     return TextFormField(
@@ -431,8 +406,8 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
         Text(
           'Días de la semana',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -467,7 +442,8 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
         labelText: 'Día del mes',
         suffixText: 'del mes',
         border: OutlineInputBorder(),
-        helperText: 'Entre 1 y 31 (se ajusta al último día si el mes es más corto)',
+        helperText:
+            'Entre 1 y 31 (se ajusta al último día si el mes es más corto)',
       ),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -486,8 +462,8 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
     final label = _endDate == null
         ? 'Sin fecha límite'
         : '${_endDate!.day.toString().padLeft(2, '0')}/'
-            '${_endDate!.month.toString().padLeft(2, '0')}/'
-            '${_endDate!.year}';
+              '${_endDate!.month.toString().padLeft(2, '0')}/'
+              '${_endDate!.year}';
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -498,10 +474,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
         children: [
           TextButton(
             onPressed: _pickEndDate,
-            child: Text(
-              label,
-              style: TextStyle(color: cs.primary),
-            ),
+            child: Text(label, style: TextStyle(color: cs.primary)),
           ),
           if (_endDate != null)
             IconButton(
@@ -560,14 +533,6 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
           contentPadding: EdgeInsets.zero,
         ),
         if (_alarmEnabled) ...[
-          SwitchListTile(
-            title: const Text('Pantalla completa'),
-            subtitle: const Text('Muestra una pantalla de alarma al dispararse'),
-            value: _alarmFullScreen,
-            onChanged: (v) => setState(() => _alarmFullScreen = v),
-            contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 8),
           DropdownButtonFormField<int>(
             initialValue: _snoozeMinutes,
             decoration: const InputDecoration(
@@ -575,8 +540,7 @@ class _AlertFormScreenState extends ConsumerState<AlertFormScreen> {
               border: OutlineInputBorder(),
             ),
             items: _snoozeOptions.map((m) {
-              final label =
-                  m == 0 ? 'Sin posponer' : '$m minutos';
+              final label = m == 0 ? 'Sin posponer' : '$m minutos';
               return DropdownMenuItem(value: m, child: Text(label));
             }).toList(),
             onChanged: (v) {
@@ -605,9 +569,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

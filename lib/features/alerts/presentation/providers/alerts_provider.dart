@@ -47,11 +47,10 @@ class AlertsNotifier extends AsyncNotifier<List<Alert>> {
 
   Future<List<Alert>> _fetchSorted() async {
     final alerts = await _repo.findAll();
-    return [...alerts]
-      ..sort((a, b) {
-        if (a.isActive != b.isActive) return a.isActive ? -1 : 1;
-        return a.timeMinutes.compareTo(b.timeMinutes);
-      });
+    return [...alerts]..sort((a, b) {
+      if (a.isActive != b.isActive) return a.isActive ? -1 : 1;
+      return a.timeMinutes.compareTo(b.timeMinutes);
+    });
   }
 
   /// Persiste una nueva alerta y programa su próxima notificación.
@@ -59,7 +58,11 @@ class AlertsNotifier extends AsyncNotifier<List<Alert>> {
     await _repo.save(alert);
     try {
       await _scheduling.scheduleAlert(alert);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[AlertsNotifier] scheduleAlert failed: $e');
     }
     state = await AsyncValue.guard(_fetchSorted);
@@ -72,13 +75,21 @@ class AlertsNotifier extends AsyncNotifier<List<Alert>> {
   Future<void> edit(Alert alert) async {
     try {
       await _scheduling.cancelAlert(alert);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[AlertsNotifier] cancelAlert failed: $e');
     }
     await _repo.save(alert);
     try {
       await _scheduling.scheduleAlert(alert);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[AlertsNotifier] scheduleAlert(edit) failed: $e');
     }
     state = await AsyncValue.guard(_fetchSorted);
@@ -114,7 +125,11 @@ class AlertsNotifier extends AsyncNotifier<List<Alert>> {
     if (updated.isActive) {
       try {
         await _scheduling.scheduleAlert(updated);
-      } catch (e) {
+      } catch (e, st) {
+        debugPrint(
+          '[alarm-audit] error=$e\n'
+          'stacktrace=$st',
+        );
         debugPrint('[AlertsNotifier] scheduleAlert(toggle) failed: $e');
       }
     }

@@ -16,9 +16,7 @@ class AlertsScreen extends ConsumerWidget {
     final alertsAsync = ref.watch(alertsNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Alertas'),
-      ),
+      appBar: AppBar(title: const Text('Alertas')),
       body: alertsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -34,8 +32,7 @@ class AlertsScreen extends ConsumerWidget {
             ? const EmptyState(
                 icon: Icons.notifications_none_rounded,
                 title: 'Sin alertas',
-                message:
-                    'Toca + para crear tu primera alerta recurrente.',
+                message: 'Toca + para crear tu primera alerta recurrente.',
               )
             : RefreshIndicator(
                 onRefresh: () => ref.refresh(alertsNotifierProvider.future),
@@ -73,9 +70,7 @@ class AlertsScreen extends ConsumerWidget {
   }) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => AlertFormScreen(alert: alert),
-      ),
+      MaterialPageRoute(builder: (_) => AlertFormScreen(alert: alert)),
     );
   }
 
@@ -87,7 +82,8 @@ class AlertsScreen extends ConsumerWidget {
     final confirmed = await showConfirmDialog(
       context: context,
       title: 'Eliminar alerta',
-      message: '¿Quieres eliminar "${alert.title}"?\nEsta acción no se puede deshacer.',
+      message:
+          '¿Quieres eliminar "${alert.title}"?\nEsta acción no se puede deshacer.',
     );
     if (confirmed && context.mounted) {
       await ref.read(alertsNotifierProvider.notifier).delete(alert.id);

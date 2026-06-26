@@ -44,7 +44,17 @@ class AlarmService {
     String? payload,
   }) async {
     final local = dateTime.toLocal();
-    if (!local.isAfter(DateTime.now())) return false;
+    if (!local.isAfter(DateTime.now())) {
+      debugPrint(
+        '[alarm-audit] schedule skipped: trigger is not future\n'
+        'id=$id\n'
+        'payload=$payload\n'
+        'trigger local=$local\n'
+        'trigger UTC=${local.toUtc()}\n'
+        'isFuture=false',
+      );
+      return false;
+    }
 
     final settings = AlarmSettings(
       id: id,
@@ -64,7 +74,28 @@ class AlarmService {
       payload: payload,
     );
 
-    return Alarm.set(alarmSettings: settings);
+    try {
+      debugPrint(
+        '[alarm-audit] Alarm.set start\n'
+        'id=$id\n'
+        'payload=$payload\n'
+        'trigger local=$local\n'
+        'trigger UTC=${local.toUtc()}',
+      );
+      final result = await Alarm.set(alarmSettings: settings);
+      debugPrint(
+        '[alarm-audit] Alarm.set result=$result\n'
+        'id=$id\n'
+        'payload=$payload',
+      );
+      return result;
+    } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
+      rethrow;
+    }
   }
 
   Future<bool> cancel(int id) => Alarm.stop(id);
@@ -74,6 +105,10 @@ class AlarmService {
       await Alarm.stop(id);
       _emittedRingingIds.remove(id);
     } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[AlarmService] stopAlarm($id) failed: $e');
       debugPrintStack(stackTrace: st);
       rethrow;
@@ -101,6 +136,10 @@ class AlarmService {
       final snoozed = settings.copyWith(dateTime: DateTime.now().add(duration));
       await Alarm.set(alarmSettings: snoozed);
     } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[AlarmService] snoozeAlarm($id) failed: $e');
       debugPrintStack(stackTrace: st);
       try {
@@ -127,6 +166,11 @@ class AlarmService {
 
     for (final alarm in alarms) {
       if (!_emittedRingingIds.add(alarm.id)) continue;
+      debugPrint(
+        '[alarm-audit] Alarm.ringing\n'
+        'id=${alarm.id}\n'
+        'payload=${alarm.payload}',
+      );
       _ringingController.add(
         ActiveAlarm(
           id: alarm.id,

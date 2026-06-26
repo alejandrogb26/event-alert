@@ -25,11 +25,11 @@ class AppNotificationConfig {
   final bool vibration;
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        'minutesBefore': minutesBefore,
-        if (customSound != null) 'customSound': customSound,
-        'vibration': vibration,
-      };
+    'enabled': enabled,
+    'minutesBefore': minutesBefore,
+    if (customSound != null) 'customSound': customSound,
+    'vibration': vibration,
+  };
 
   factory AppNotificationConfig.fromJson(Map<String, dynamic> json) =>
       AppNotificationConfig(
@@ -44,15 +44,14 @@ class AppNotificationConfig {
     int? minutesBefore,
     Object? customSound = _absent,
     bool? vibration,
-  }) =>
-      AppNotificationConfig(
-        enabled: enabled ?? this.enabled,
-        minutesBefore: minutesBefore ?? this.minutesBefore,
-        customSound: identical(customSound, _absent)
-            ? this.customSound
-            : customSound as String?,
-        vibration: vibration ?? this.vibration,
-      );
+  }) => AppNotificationConfig(
+    enabled: enabled ?? this.enabled,
+    minutesBefore: minutesBefore ?? this.minutesBefore,
+    customSound: identical(customSound, _absent)
+        ? this.customSound
+        : customSound as String?,
+    vibration: vibration ?? this.vibration,
+  );
 
   @override
   String toString() =>

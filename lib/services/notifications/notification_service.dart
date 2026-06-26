@@ -23,15 +23,18 @@ class NotificationService {
     tzdata.initializeTimeZones();
     await _setLocalTimezone();
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/launcher_icon');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/launcher_icon',
+    );
     const settings = InitializationSettings(android: androidSettings);
 
     await _plugin.initialize(settings: settings);
 
     // Crea los canales Android. Si ya existen, la operación es idempotente.
-    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidImpl = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidImpl?.createNotificationChannel(NotificationChannels.events);
     await androidImpl?.createNotificationChannel(NotificationChannels.alerts);
   }
@@ -48,8 +51,9 @@ class NotificationService {
       tz.setLocalLocation(tz.getLocation(info.identifier));
     } catch (e) {
       debugPrint(
-          '[NotificationService] No se pudo detectar la zona horaria local: $e. '
-          'Usando UTC como fallback.');
+        '[NotificationService] No se pudo detectar la zona horaria local: $e. '
+        'Usando UTC como fallback.',
+      );
     }
   }
 

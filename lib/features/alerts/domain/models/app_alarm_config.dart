@@ -29,20 +29,20 @@ class AppAlarmConfig {
   final int snoozeMinutes;
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        'fullScreen': fullScreen,
-        if (soundAsset != null) 'soundAsset': soundAsset,
-        'looping': looping,
-        'snoozeMinutes': snoozeMinutes,
-      };
+    'enabled': enabled,
+    'fullScreen': fullScreen,
+    if (soundAsset != null) 'soundAsset': soundAsset,
+    'looping': looping,
+    'snoozeMinutes': snoozeMinutes,
+  };
 
   factory AppAlarmConfig.fromJson(Map<String, dynamic> json) => AppAlarmConfig(
-        enabled: json['enabled'] as bool? ?? false,
-        fullScreen: json['fullScreen'] as bool? ?? false,
-        soundAsset: json['soundAsset'] as String?,
-        looping: json['looping'] as bool? ?? true,
-        snoozeMinutes: json['snoozeMinutes'] as int? ?? 5,
-      );
+    enabled: json['enabled'] as bool? ?? false,
+    fullScreen: json['fullScreen'] as bool? ?? false,
+    soundAsset: json['soundAsset'] as String?,
+    looping: json['looping'] as bool? ?? true,
+    snoozeMinutes: json['snoozeMinutes'] as int? ?? 5,
+  );
 
   AppAlarmConfig copyWith({
     bool? enabled,
@@ -50,16 +50,15 @@ class AppAlarmConfig {
     Object? soundAsset = _absent,
     bool? looping,
     int? snoozeMinutes,
-  }) =>
-      AppAlarmConfig(
-        enabled: enabled ?? this.enabled,
-        fullScreen: fullScreen ?? this.fullScreen,
-        soundAsset: identical(soundAsset, _absent)
-            ? this.soundAsset
-            : soundAsset as String?,
-        looping: looping ?? this.looping,
-        snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
-      );
+  }) => AppAlarmConfig(
+    enabled: enabled ?? this.enabled,
+    fullScreen: fullScreen ?? this.fullScreen,
+    soundAsset: identical(soundAsset, _absent)
+        ? this.soundAsset
+        : soundAsset as String?,
+    looping: looping ?? this.looping,
+    snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
+  );
 
   @override
   String toString() =>

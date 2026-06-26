@@ -15,6 +15,10 @@ class ExactAlarmPermissionService {
       return await _channel.invokeMethod<bool>('canScheduleExactAlarms') ??
           false;
     } catch (e, st) {
+      debugPrint(
+        '[alarm-audit] error=$e\n'
+        'stacktrace=$st',
+      );
       debugPrint('[ExactAlarmPermissionService] check failed: $e');
       debugPrintStack(stackTrace: st);
       return false;

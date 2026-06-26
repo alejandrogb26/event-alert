@@ -55,7 +55,6 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   late int _minutesBefore;
 
   late bool _alarmEnabled;
-  late bool _alarmFullScreen;
   late int _snoozeMinutes;
 
   bool get _isEdit => widget.event != null;
@@ -84,11 +83,11 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
 
     _notifEnabled = e?.notificationConfig.enabled ?? true;
     final savedMinutes = e?.notificationConfig.minutesBefore ?? 0;
-    _minutesBefore =
-        _minutesBeforeOptions.contains(savedMinutes) ? savedMinutes : 0;
+    _minutesBefore = _minutesBeforeOptions.contains(savedMinutes)
+        ? savedMinutes
+        : 0;
 
     _alarmEnabled = e?.alarmConfig.enabled ?? false;
-    _alarmFullScreen = e?.alarmConfig.fullScreen ?? false;
     final savedSnooze = e?.alarmConfig.snoozeMinutes ?? 5;
     _snoozeMinutes = _snoozeOptions.contains(savedSnooze) ? savedSnooze : 5;
   }
@@ -138,8 +137,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     final event = CalendarEvent(
       id: widget.event?.id ?? const Uuid().v4(),
       title: _titleCtrl.text.trim(),
-      description:
-          _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+      description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
       startDateTime: utcDateTime,
       duration: _durationMinutes != null
           ? Duration(minutes: _durationMinutes!)
@@ -150,7 +148,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       ),
       alarmConfig: AppAlarmConfig(
         enabled: _alarmEnabled,
-        fullScreen: _alarmFullScreen,
+        fullScreen: false,
         snoozeMinutes: _snoozeMinutes,
       ),
       createdAt: widget.event?.createdAt ?? DateTime.now().toUtc(),
@@ -160,8 +158,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     // Si ya está concedido, la llamada es instantánea sin mostrar ningún diálogo.
     bool notifPermGranted = true;
     if (_notifEnabled) {
-      final permStatus =
-          await PermissionService.instance.requestNotificationPermission();
+      final permStatus = await PermissionService.instance
+          .requestNotificationPermission();
       notifPermGranted = permStatus == NotificationPermissionStatus.granted;
     }
 
@@ -193,12 +191,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? 'Editar evento' : 'Nuevo evento'),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text('Guardar'),
-          ),
-        ],
+        actions: [TextButton(onPressed: _save, child: const Text('Guardar'))],
       ),
       body: Form(
         key: _formKey,
@@ -278,9 +271,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         onPressed: _pickDate,
         child: Text(
           dateStr,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: cs.primary,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(color: cs.primary),
         ),
       ),
     );
@@ -298,9 +291,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         onPressed: _pickTime,
         child: Text(
           label,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: cs.primary,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(color: cs.primary),
         ),
       ),
     );
@@ -371,15 +364,6 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           contentPadding: EdgeInsets.zero,
         ),
         if (_alarmEnabled) ...[
-          SwitchListTile(
-            title: const Text('Pantalla completa'),
-            subtitle:
-                const Text('Muestra una pantalla de alarma al dispararse'),
-            value: _alarmFullScreen,
-            onChanged: (v) => setState(() => _alarmFullScreen = v),
-            contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 8),
           DropdownButtonFormField<int>(
             initialValue: _snoozeMinutes,
             decoration: const InputDecoration(
@@ -416,9 +400,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

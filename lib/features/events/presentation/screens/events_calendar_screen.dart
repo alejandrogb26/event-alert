@@ -40,10 +40,7 @@ class _EventsCalendarScreenState extends ConsumerState<EventsCalendarScreen> {
   // Confirmación de eliminación
   // ───────────────────────────────────────────
 
-  Future<void> _confirmDelete(
-    BuildContext context,
-    CalendarEvent event,
-  ) async {
+  Future<void> _confirmDelete(BuildContext context, CalendarEvent event) async {
     final confirmed = await showConfirmDialog(
       context: context,
       title: 'Eliminar evento',

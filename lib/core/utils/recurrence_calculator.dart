@@ -27,9 +27,21 @@ DateTime? nextOccurrence({
     case RecurrenceType.daily:
       candidate = _nextDaily(rule.interval, hour, minute, from);
     case RecurrenceType.weekly:
-      candidate = _nextWeekly(rule.weekdays!, rule.interval, hour, minute, from);
+      candidate = _nextWeekly(
+        rule.weekdays!,
+        rule.interval,
+        hour,
+        minute,
+        from,
+      );
     case RecurrenceType.monthly:
-      candidate = _nextMonthly(rule.dayOfMonth!, rule.interval, hour, minute, from);
+      candidate = _nextMonthly(
+        rule.dayOfMonth!,
+        rule.interval,
+        hour,
+        minute,
+        from,
+      );
     case RecurrenceType.monthlyFirst:
       candidate = _nextMonthlyFirst(rule.interval, hour, minute, from);
   }
@@ -66,11 +78,13 @@ DateTime? _nextWeekly(
   final windowDays = interval * 7;
 
   for (var offset = 0; offset <= windowDays; offset++) {
-    final date = DateTime(from.year, from.month, from.day)
-        .add(Duration(days: offset));
+    final date = DateTime(
+      from.year,
+      from.month,
+      from.day,
+    ).add(Duration(days: offset));
     if (sorted.contains(date.weekday)) {
-      final candidate =
-          DateTime(date.year, date.month, date.day, hour, minute);
+      final candidate = DateTime(date.year, date.month, date.day, hour, minute);
       if (candidate.isAfter(from)) return candidate;
     }
   }
@@ -91,17 +105,17 @@ DateTime? _nextMonthly(
   if (candidate.isAfter(from)) return candidate;
 
   // Avanzar [interval] meses
-  candidate =
-      _clampedDay(from.year, from.month + interval, dayOfMonth, hour, minute);
+  candidate = _clampedDay(
+    from.year,
+    from.month + interval,
+    dayOfMonth,
+    hour,
+    minute,
+  );
   return candidate;
 }
 
-DateTime? _nextMonthlyFirst(
-  int interval,
-  int hour,
-  int minute,
-  DateTime from,
-) {
+DateTime? _nextMonthlyFirst(int interval, int hour, int minute, DateTime from) {
   // Primer día de este mes
   var candidate = DateTime(from.year, from.month, 1, hour, minute);
   if (candidate.isAfter(from)) return candidate;

@@ -15,18 +15,12 @@ class _MainScreenState extends State<MainScreen> {
 
   // IndexedStack mantiene el árbol de widgets de cada pestaña vivo,
   // por lo que el scroll y el estado se conservan al cambiar de destino.
-  static const List<Widget> _screens = [
-    AlertsScreen(),
-    EventsCalendarScreen(),
-  ];
+  static const List<Widget> _screens = [AlertsScreen(), EventsCalendarScreen()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {

@@ -61,10 +61,7 @@ class EventDao {
     final rows = await db.query(
       _table,
       where: 'start_datetime BETWEEN ? AND ?',
-      whereArgs: [
-        start.millisecondsSinceEpoch,
-        end.millisecondsSinceEpoch,
-      ],
+      whereArgs: [start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
       orderBy: 'start_datetime ASC',
     );
     return rows.map(CalendarEvent.fromMap).toList();

@@ -15,9 +15,13 @@ void main() async {
   try {
     final canScheduleExactAlarms = await ExactAlarmPermissionService.instance
         .canScheduleExactAlarms();
-    debugPrint('[main] canScheduleExactAlarms=$canScheduleExactAlarms');
+    debugPrint('[alarm-audit] canScheduleExactAlarms=$canScheduleExactAlarms');
     await AlarmService.instance.initialize();
   } catch (e, st) {
+    debugPrint(
+      '[alarm-audit] error=$e\n'
+      'stacktrace=$st',
+    );
     debugPrint('[main] AlarmService init failed: $e');
     debugPrintStack(stackTrace: st);
   }
@@ -26,6 +30,10 @@ void main() async {
     await NotificationService.instance.initialize();
     await SchedulingService.instance.rescheduleAll();
   } catch (e, st) {
+    debugPrint(
+      '[alarm-audit] error=$e\n'
+      'stacktrace=$st',
+    );
     debugPrint('[main] Servicios de scheduling failed: $e');
     debugPrintStack(stackTrace: st);
   }

@@ -72,12 +72,22 @@ class SchedulingService {
   }
 
   Future<void> _scheduleEventAlarm(CalendarEvent event) async {
-    if (!event.alarmConfig.enabled) return;
-
     final trigger = event.startDateTime.toLocal();
-    if (!trigger.isAfter(DateTime.now())) return;
-
     final alarmId = stableId('alarm:event:${event.id}');
+    final isFuture = trigger.isAfter(DateTime.now());
+    debugPrint(
+      '[alarm-audit] schedule requested\n'
+      'id=$alarmId\n'
+      'payload=alarm:event:${event.id}\n'
+      'trigger local=$trigger\n'
+      'trigger UTC=${trigger.toUtc()}\n'
+      'isFuture=$isFuture\n'
+      'enabled=${event.alarmConfig.enabled}',
+    );
+
+    if (!event.alarmConfig.enabled) return;
+    if (!isFuture) return;
+
     await _alarm.scheduleAlarm(
       id: alarmId,
       title: event.title,
@@ -150,14 +160,22 @@ class SchedulingService {
   }
 
   Future<void> _scheduleAlertAlarm(Alert alert, DateTime next) async {
-    if (!alert.alarmConfig.enabled) return;
-
     final trigger = next.toLocal();
-    if (!trigger.isAfter(DateTime.now())) return;
-
-    // TODO(alarm): reprogramar automáticamente la siguiente ocurrencia cuando
-    // el paquete notifique que esta alarma recurrente ya ha sonado.
     final alarmId = stableId('alarm:alert:${alert.id}');
+    final isFuture = trigger.isAfter(DateTime.now());
+    debugPrint(
+      '[alarm-audit] schedule requested\n'
+      'id=$alarmId\n'
+      'payload=alarm:alert:${alert.id}\n'
+      'trigger local=$trigger\n'
+      'trigger UTC=${trigger.toUtc()}\n'
+      'isFuture=$isFuture\n'
+      'enabled=${alert.alarmConfig.enabled}',
+    );
+
+    if (!alert.alarmConfig.enabled) return;
+    if (!isFuture) return;
+
     await _alarm.scheduleAlarm(
       id: alarmId,
       title: alert.title,
@@ -199,7 +217,11 @@ class SchedulingService {
     for (final alert in alerts) {
       try {
         await rescheduleAlert(alert);
-      } catch (e) {
+      } catch (e, st) {
+        debugPrint(
+          '[alarm-audit] error=$e\n'
+          'stacktrace=$st',
+        );
         debugPrint(
           '[SchedulingService] rescheduleAlert(${alert.id}) failed: $e',
         );
@@ -210,7 +232,11 @@ class SchedulingService {
     for (final event in events) {
       try {
         await rescheduleEvent(event);
-      } catch (e) {
+      } catch (e, st) {
+        debugPrint(
+          '[alarm-audit] error=$e\n'
+          'stacktrace=$st',
+        );
         debugPrint(
           '[SchedulingService] rescheduleEvent(${event.id}) failed: $e',
         );
